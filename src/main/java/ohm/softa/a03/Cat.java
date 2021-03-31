@@ -3,7 +3,7 @@ package ohm.softa.a03;
 public class Cat {
 
 	// initially, animals are sleeping
-	private State currentState = new SleepingState();
+	private State currentState;
 
 	// state durations (set via constructor), ie. the number of ticks in each state
 	private final int sleep;
@@ -17,6 +17,8 @@ public class Cat {
 		this.sleep = sleep;
 		this.awake = awake;
 		this.digest = digest;
+
+		currentState = new SleepingState(sleep);
 	}
 
 	public void tick(){

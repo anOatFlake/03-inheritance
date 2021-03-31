@@ -4,81 +4,76 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 abstract public class State {
-    int t;
-    final int duration = 0;
+    private int t = 0;
+    private final int duration;
     protected static final Logger logger = LogManager.getLogger();
 
+    State(int duration){this.duration = duration;}
     abstract State successor(Cat cat);
     public int getTime() { return t; }
     public int getDuration() { return duration; }
+
     final public State tick(Cat cat){
         logger.info("tick()");
         t = t + 1;
-
-        return successor(cat);
+        if (t < duration) {
+            return this;
+        }
+        else {
+            return successor(cat);
+        }
     }
 }
 
 class DigestingState extends State {
-    private int digestingTime = 0;
-
+    DigestingState(int duration) {
+        super(duration);
+    }
     State successor(Cat cat) {
-        logger.info("DigestingState");
-        digestingTime = digestingTime + 1;
-        if (digestingTime == cat.getDigest()) {
-            logger.info("Getting in a playful mood!");
-            return new PlayfulState();
-        }
-        else {
-            return this;
-        }
+        logger.info("Getting in a playful mood!");
+        return new PlayfulState(cat.getAwake()- cat.getDigest());
     }
 }
 
 class HungryState extends State {
+    HungryState(int duration) {
+        super(duration);
+    }
+
     State successor(Cat cat){
-        logger.info("HungryState");
-        if (t == cat.getAwake()){
-            logger.info("I've starved for a too long time...good bye...");
-            return new DeathState();
-        }
-        return this;
+        logger.info("I've starved for a too long time...good bye...");
+        return new DeathState(1);
     }
     State feed(Cat cat){
         logger.info("You feed the cat...");
-        return new DigestingState();
+        return new DigestingState(cat.getDigest());
     }
 }
 
 class PlayfulState extends State {
-    State successor(Cat cat){
-        logger.info("PlayfulState");
-        if (t >= cat.getAwake() - cat.getDigest()) {
-            logger.info("Yoan... getting tired!");
-            t = 0;
-            return new SleepingState();
-        }
-        return this;
+    PlayfulState(int duration) {
+        super(duration);
+    }
+    State successor(Cat cat) {
+        logger.info("Yoan... getting tired!");
+        return new SleepingState(cat.getSleep());
     }
 }
-
 class DeathState extends State {
+    DeathState(int duration) {
+        super(duration);
+    }
     State successor(Cat cat){
-        logger.info("DeathState");
         return this;
     }
 }
 
 class SleepingState extends State {
+    SleepingState(int duration) {
+        super(duration);
+    }
     State successor(Cat cat){
-        logger.info("Sleepingstate");
-        if (t == cat.getSleep()) {
-            logger.info("Yoan... getting hungry!");
-            t = 0;
-            return new HungryState();
-        }
-        else {
-            return this;
-        }
+        logger.info("Yoan... getting hungry!");
+        return new HungryState(cat.getAwake());
     }
 }
